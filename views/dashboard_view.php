@@ -429,44 +429,9 @@
             </div>
         </div>
 
-        <script>
-            let workDuration = 25, timeLeft = 25 * 60, timerId = null, isRunning = false, isBreak = false, session = 1;
-            document.querySelectorAll('.dur-btn').forEach(btn => {
-                btn.onclick = () => {
-                    if (isRunning) return;
-                    document.querySelectorAll('.dur-btn').forEach(b => { b.style.background = 'var(--bg)'; b.style.color = 'var(--text)'; b.style.borderColor = 'var(--border)'; });
-                    btn.style.background = 'var(--accent)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--accent)';
-                    workDuration = parseInt(btn.dataset.min); timeLeft = workDuration * 60; updateDisplay();
-                };
-            });
-            const display = document.getElementById('displayTime'), circle = document.getElementById('timerCircle'), startBtn = document.getElementById('btnStart');
-            function formatTime(s) { return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`; }
-            function updateDisplay() { display.textContent = formatTime(timeLeft); }
-            function toggleTimer() {
-                if (isRunning) { clearInterval(timerId); isRunning = false; startBtn.textContent = "▶ Reprendre"; }
-                else { isRunning = true; startBtn.textContent = "⏸ Pause"; timerId = setInterval(() => { if (timeLeft > 0) { timeLeft--; updateDisplay(); } else { finishPhase(); } }, 1000); }
-            }
-            function finishPhase() {
-                clearInterval(timerId); isRunning = false;
-                if (!isBreak) { fetch('../api/session.php', { method: 'POST', body: JSON.stringify({ duration: workDuration }), headers: { 'Content-Type': 'application/json' } }); isBreak = true; timeLeft = 5 * 60; circle.classList.add('break'); alert('Pause de 5 min !'); }
-                else { isBreak = false; session = session < 4 ? session + 1 : 1; timeLeft = workDuration * 60; circle.classList.remove('break'); alert('C\'est reparti !'); }
-                updateDisplay(); startBtn.textContent = "▶ Démarrer";
-            }
-            function resetTimer() { clearInterval(timerId); isRunning = false; isBreak = false; session = 1; timeLeft = workDuration * 60; updateDisplay(); circle.classList.remove('break'); startBtn.textContent = "▶ Démarrer"; }
-            function toggleChat() { document.getElementById('chatBox').classList.toggle('open'); }
-            function sendChat() {
-                const input = document.getElementById('chatInput'), msg = input.value.trim();
-                if (!msg) return;
-                const messages = document.getElementById('chatMessages');
-                messages.innerHTML += `<div class="chat-msg user">${msg}</div>`;
-                input.value = '';
-                fetch('../api/chatbot.php', { method: 'POST', body: JSON.stringify({ message: msg }), headers: { 'Content-Type': 'application/json' } })
-                    .then(r => r.json()).then(data => { messages.innerHTML += `<div class="chat-msg bot">${data.response}</div>`; messages.scrollTop = messages.scrollHeight; });
-            }
-        </script>
-
     </div>
     <script>
+       
         function toggleTheme(theme) {
             document.body.classList.remove('dark', 'ocean');
             if (theme) {
@@ -476,8 +441,140 @@
                 localStorage.removeItem('lumina_theme');
             }
         }
+        
         const savedTheme = localStorage.getItem('lumina_theme');
-        if (savedTheme) document.body.classList.add(savedTheme);
+        if (savedTheme) {
+            document.body.classList.add(savedTheme);
+        }
+
+      
+        let workDuration = 25;
+        let timeLeft = 25 * 60;
+        let timerId = null;
+        let isRunning = false;
+        let isBreak = false;
+        let session = 1;
+
+     
+        document.querySelectorAll('.dur-btn').forEach(btn => {
+            btn.onclick = () => {
+                if (isRunning) return;
+                
+                document.querySelectorAll('.dur-btn').forEach(b => {
+                    b.style.background = 'var(--bg)';
+                    b.style.color = 'var(--text)';
+                    b.style.borderColor = 'var(--border)';
+                });
+                
+                btn.style.background = 'var(--accent)';
+                btn.style.color = '#fff';
+                btn.style.borderColor = 'var(--accent)';
+                
+                workDuration = parseInt(btn.dataset.min);
+                timeLeft = workDuration * 60;
+                updateDisplay();
+            };
+        });
+
+      
+        const display = document.getElementById('displayTime');
+        const circle = document.getElementById('timerCircle');
+        const startBtn = document.getElementById('btnStart');
+
+      
+        function formatTime(s) {
+            const minutes = Math.floor(s / 60).toString().padStart(2, '0');
+            const seconds = (s % 60).toString().padStart(2, '0');
+            return `${minutes}:${seconds}`;
+        }
+
+        function updateDisplay() {
+            display.textContent = formatTime(timeLeft);
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                clearInterval(timerId);
+                isRunning = false;
+                startBtn.textContent = "▶ Reprendre";
+            } else {
+                isRunning = true;
+                startBtn.textContent = "⏸ Pause";
+                timerId = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        finishPhase();
+                    }
+                    
+                }, 1000);
+            }
+        }
+
+        function finishPhase() {
+            clearInterval(timerId);
+            isRunning = false;
+            
+            if (!isBreak) {
+                fetch('../api/session.php', {
+                    method: 'POST',
+                    body: JSON.stringify({ duration: workDuration }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                isBreak = true;
+                timeLeft = 5 * 60;
+                circle.classList.add('break');
+                alert('Pause de 5 min !');
+            } else {
+                isBreak = false;
+                session = session < 4 ? session + 1 : 1;
+                timeLeft = workDuration * 60;
+                circle.classList.remove('break');
+                alert('C\'est reparti !');
+            }
+            
+            updateDisplay();
+            startBtn.textContent = "▶ Démarrer";
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            isRunning = false;
+            isBreak = false;
+            session = 1;
+            timeLeft = workDuration * 60;
+            updateDisplay();
+            circle.classList.remove('break');
+            startBtn.textContent = "▶ Démarrer";
+        }
+
+      
+        function toggleChat() {
+            document.getElementById('chatBox').classList.toggle('open');
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            
+            if (!msg) return;
+            
+            const messages = document.getElementById('chatMessages');
+            messages.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+            input.value = '';
+            
+            fetch('../api/chatbot.php', {
+                method: 'POST',
+                body: JSON.stringify({ message: msg }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                messages.innerHTML += `<div class="chat-msg bot">${data.response}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            });
+        }
     </script>
 </body>
 
